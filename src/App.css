@@ -1,0 +1,14 @@
+/* src/App.css */
+.App {
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    background-color: #f0f6fc; /* 연한 파란색 배경 */
+    padding: 20px 0;
+  }
+  
+  @media (max-width: 768px) {
+    .App {
+      padding: 10px;
+    }
+  }
