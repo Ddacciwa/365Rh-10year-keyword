@@ -1,20 +1,31 @@
 // src/KeywordManager.js
 import React, { useState } from "react";
 import { deleteDoc, doc } from "firebase/firestore";
-import { firestore } from "./firebaseConfig";
+import { ref, remove } from "firebase/database"; // 추가
+import { firestore, database } from "./firebaseConfig"; // database 추가
 
 function KeywordManager({ words, isAdmin }) {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // 키워드 삭제 처리
+  // 키워드 삭제 처리 - Realtime Database 지원 추가
   const handleDelete = async (wordId, wordText) => {
     if (!isAdmin) return;
     
     if (deleteConfirm === wordId) {
       try {
-        await deleteDoc(doc(firestore, "coreKeywords", wordId));
+        // Firestore에서 삭제
+        if (wordId.startsWith('temp-')) {
+          // 임시 ID인 경우 Firestore에서는 삭제할 필요 없음
+        } else {
+          await deleteDoc(doc(firestore, "coreKeywords", wordId));
+        }
+        
+        // Realtime Database에서도 삭제
+        const keyId = wordText.toLowerCase().replace(/\s+/g, '-');
+        await remove(ref(database, `keywords/${keyId}`));
+        
         setMessage({ 
           type: "success", 
           text: `"${wordText}" 키워드가 삭제되었습니다.` 

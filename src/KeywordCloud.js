@@ -1,3 +1,6 @@
+// KeywordCloud.js - ESLint 경고 비활성화 주석 추가
+import { ref, set, update, onValue, get } from "firebase/database";
+import { database } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import AdminLogin from "./AdminLogin";
@@ -12,8 +15,10 @@ import {
   where,
   updateDoc,
   increment,
+  // eslint-disable-next-line no-unused-vars
   onSnapshot,
   serverTimestamp,
+  // eslint-disable-next-line no-unused-vars
   orderBy
 } from "firebase/firestore";
 import { firestore } from "./firebaseConfig";
@@ -23,11 +28,12 @@ function KeywordCloud() {
   const [words, setWords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const keywordsRef = useMemo(() => ref(database, "keywords"), []);
   const [buttonClicked, setButtonClicked] = useState(false);
   const [lastKeyword, setLastKeyword] = useState("");
   const [lastKeywordTime, setLastKeywordTime] = useState(0);
   const [duplicateError, setDuplicateError] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // 이 부분 추가
+  const [isAdmin, setIsAdmin] = useState(false);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -58,15 +64,120 @@ function KeywordCloud() {
       clearTimeout(timeoutId);
     };
   }, []);
-  // 관리자 인증 상태 확인 - 여기에 추가
+  
+  // 관리자 인증 상태 확인
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAdmin(!!user);
-   });
+    });
     return () => unsubscribe();
   }, []);
+  
+  // Firebase 연결 테스트
+  useEffect(() => {
+    console.log("Firebase 연결 테스트 시작");
+    
+    try {
+      console.log("Firestore 인스턴스:", firestore);
+      console.log("Realtime Database 인스턴스:", database);
+      console.log("Auth 인스턴스:", auth);
+      
+      // 테스트 데이터 생성
+      const testRef = ref(database, "test");
+      set(testRef, {
+        message: "연결 테스트",
+        timestamp: new Date().toISOString()
+      })
+      .then(() => {
+        console.log("테스트 데이터 저장 성공!");
+      })
+      .catch((error) => {
+        console.error("테스트 데이터 저장 오류:", error);
+      });
+    } catch (error) {
+      console.error("Firebase 초기화 오류:", error);
+    }
+  }, []);
 
-  // 키워드 제출 - 성능 개선
+  // Realtime Database에서 키워드 데이터 실시간 가져오기
+  useEffect(() => {
+    setLoading(true);
+    console.log("Realtime Database 구독 시작");
+    
+    try {
+      const unsubscribe = onValue(keywordsRef, (snapshot) => {
+        console.log("Realtime Database에서 데이터 수신");
+        const data = snapshot.val();
+        if (data) {
+          console.log("수신된 데이터:", data);
+          
+          // 객체를 배열로 변환 (모든 필드 포함)
+          const keywordList = Object.entries(data).map(([id, val]) => ({
+            id,
+            text: val.text,
+            value: val.value || 1,
+            important: val.important || false,
+            completed: val.completed || false,
+            createdAt: val.createdAt || "",
+            updatedAt: val.updatedAt || ""
+          }));
+          
+          // 기존 데이터와 병합 (값이 줄어들지 않도록)
+          setWords(prevWords => {
+            const wordMap = new Map();
+            
+            // 기존 데이터 먼저 맵에 추가
+            prevWords.forEach(word => {
+              const key = word.id || word.text;
+              wordMap.set(key, word);
+            });
+            
+            // 새 데이터로 맵 업데이트 (값이 더 큰 경우에만)
+            keywordList.forEach(newWord => {
+              const key = newWord.id || newWord.text;
+              const existingWord = wordMap.get(key);
+              
+              if (!existingWord) {
+                // 새 단어면 그대로 추가
+                wordMap.set(key, newWord);
+              } else {
+                // 기존 단어면 값, 상태 등 업데이트
+                wordMap.set(key, {
+                  ...existingWord,
+                  value: Math.max(existingWord.value, newWord.value),
+                  important: newWord.important,
+                  completed: newWord.completed,
+                  createdAt: newWord.createdAt || existingWord.createdAt,
+                  updatedAt: newWord.updatedAt || existingWord.updatedAt
+                });
+              }
+            });
+            
+            // 맵을 배열로 변환하여 반환
+            return Array.from(wordMap.values());
+          });
+        } else {
+          console.log("데이터가 없습니다.");
+        }
+        setLoading(false);
+      }, (error) => {
+        console.error("Realtime Database 구독 오류:", error);
+        setError("데이터를 불러오는 중 오류가 발생했습니다: " + error.message);
+        setLoading(false);
+      });
+      
+      return () => {
+        console.log("Realtime Database 구독 해제");
+        unsubscribe();
+      };
+    } catch (error) {
+      console.error("Realtime Database 구독 설정 오류:", error);
+      setError("Firebase 연결 중 오류가 발생했습니다: " + error.message);
+      setLoading(false);
+    }
+  }, [keywordsRef]);
+
+  // 키워드 제출 함수
   const handleSubmit = useCallback(async () => {
     const keyword = input.trim();
     if (!keyword) return;
@@ -100,28 +211,88 @@ function KeywordCloud() {
       setLastKeyword(keyword);
       setLastKeywordTime(currentTime);
 
-      // Firebase 저장 (비동기 처리)
-      const ref = collection(firestore, "coreKeywords");
-      const q = query(ref, where("text", "==", keyword));
-      const snapshot = await getDocs(q);
+      // 현재 시간을 ISO 문자열 형식으로 생성
+      const now = new Date().toISOString();
 
-      if (!snapshot.empty) {
-        const docRef = snapshot.docs[0].ref;
+      // 키워드를 소문자로 변환하고 공백을 하이픈으로 대체하여 고유 키로 사용
+      const keyId = keyword.toLowerCase().replace(/\s+/g, '-');
+      
+      // Realtime Database에 저장
+      const keywordRef = ref(database, `keywords/${keyId}`);
+      
+      console.log("키워드 저장 시도:", keyword);
+      
+      // 해당 키워드가 이미 있는지 확인
+      const snapshot = await get(keywordRef);
+      
+      if (snapshot.exists()) {
+        // 기존 키워드면 값 증가
+        const currentValue = snapshot.val().value || 0;
+        const isCompleted = snapshot.val().completed || false;
+        const isImportant = snapshot.val().important || false;
+        
+        console.log("기존 키워드 업데이트:", {
+          text: keyword,
+          value: currentValue + 1,
+          updatedAt: now,
+          completed: isCompleted,
+          important: isImportant
+        });
+        
+        await update(keywordRef, {
+          text: keyword,
+          value: currentValue + 1,
+          updatedAt: now,  // ISO 문자열 형식으로 저장
+          completed: isCompleted,  // 기존 값 유지
+          important: isImportant   // 기존 값 유지
+        });
+      } else {
+        // 새 키워드면 생성
+        console.log("새 키워드 생성:", {
+          text: keyword,
+          value: 1,
+          createdAt: now,
+          updatedAt: now,
+          completed: false,
+          important: false
+        });
+        
+        await set(keywordRef, {
+          text: keyword,
+          value: 1,
+          createdAt: now,  // ISO 문자열 형식으로 저장
+          updatedAt: now,  // ISO 문자열 형식으로 저장
+          completed: false,
+          important: false
+        });
+      }
+
+      // Firestore에도 저장
+      const firestoreRef = collection(firestore, "coreKeywords");
+      const q = query(firestoreRef, where("text", "==", keyword));
+      const firestoreSnapshot = await getDocs(q);
+
+      if (!firestoreSnapshot.empty) {
+        const docRef = firestoreSnapshot.docs[0].ref;
         await updateDoc(docRef, {
           value: increment(1),
           updatedAt: serverTimestamp()
         });
       } else {
-        await addDoc(ref, { 
-          text: keyword, 
+        await addDoc(firestoreRef, {
+          text: keyword,
           value: 1,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          completed: false,
+          important: false
         });
       }
+      
+      console.log("키워드 저장 성공!");
     } catch (err) {
       console.error("제출 오류:", err);
-      setError("키워드를 저장하는 중 오류가 발생했습니다.");
+      setError("키워드를 저장하는 중 오류가 발생했습니다: " + err.message);
     }
   }, [input, lastKeyword, lastKeywordTime]);
 
@@ -130,69 +301,6 @@ function KeywordCloud() {
       handleSubmit();
     }
   }, [handleSubmit]);
-
-  // 실시간 워드클라우드 - 값이 줄어들지 않도록 수정됨
-  useEffect(() => {
-    setLoading(true);
-    try {
-      const ref = collection(firestore, "coreKeywords");
-      // 최신 데이터 정렬 및 제한
-      const q = query(ref, orderBy("updatedAt", "desc"));
-      const unsubscribe = onSnapshot(q, 
-        { includeMetadataChanges: false }, // 메타데이터 변경 무시 (성능 향상)
-        (snapshot) => {
-          if (!snapshot.empty) {
-            // 새 데이터 가져오기
-            const newData = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              text: doc.data().text,
-              value: doc.data().value || 1
-            }));
-            
-            // 기존 데이터와 병합 (값이 줄어들지 않도록)
-            setWords(prevWords => {
-              // ID 또는 텍스트 기반으로 단어 맵 생성
-              const wordMap = new Map();
-              
-              // 기존 데이터 먼저 맵에 추가
-              prevWords.forEach(word => {
-                const key = word.id || word.text;
-                wordMap.set(key, word);
-              });
-              
-              // 새 데이터로 맵 업데이트 (값이 더 큰 경우에만)
-              newData.forEach(newWord => {
-                const key = newWord.id || newWord.text;
-                const existingWord = wordMap.get(key);
-                
-                if (!existingWord || newWord.value > existingWord.value) {
-                  wordMap.set(key, newWord);
-                }
-              });
-              
-              // 맵을 배열로 변환하여 반환
-              return Array.from(wordMap.values());
-            });
-          }
-          setLoading(false);
-          setError(null);
-        }, 
-        (err) => {
-          console.error("Firestore 오류:", err);
-          setError("데이터를 불러오는 중 오류가 발생했습니다.");
-          setLoading(false);
-        }
-      );
-
-      return () => unsubscribe();
-    } catch (err) {
-      console.error("Firestore 연결 오류:", err);
-      setError("Firebase 연결 중 오류가 발생했습니다.");
-      setLoading(false);
-    }
-  }, []);
-
-  // maxValue 변수 삭제 (사용하지 않음)
 
   // 1~10회 등록 시 점진적으로 커지는 폰트 크기 함수
   const calculateFontSize = useCallback((value) => {
@@ -376,14 +484,16 @@ function KeywordCloud() {
                 fontSize: `${fontSize}px`, 
                 color, 
                 fontWeight,
-                opacity: 0.9, 
-                textShadow: "1px 1px 1px rgba(0,0,0,0.05)",
+                opacity: word.completed ? 0.7 : 0.9, // 완료된 키워드는 흐리게
+                textDecoration: word.completed ? "line-through" : "none", // 완료된 키워드는 취소선
+                textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)", // 중요 키워드는 그림자 효과
+                borderBottom: word.important ? `2px solid ${color}` : "none", // 중요 키워드는 밑줄
                 userSelect: "none", 
                 whiteSpace: "nowrap",
                 transition: "all 0.3s ease", // 부드러운 크기 변경
                 zIndex: Math.floor(word.value * 10),
                 animation: `fadeIn 0.5s ease-out both` // 부드러운 등장 애니메이션
-              }} title={`${word.text} (${word.value}회 언급)`}>
+              }} title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요' : ''}${word.completed ? ' - 완료됨' : ''}`}>
                 {word.text}
               </div>
             );
