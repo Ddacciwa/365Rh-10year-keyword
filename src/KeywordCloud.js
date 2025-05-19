@@ -1,3 +1,7 @@
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebaseConfig";
+import AdminLogin from "./AdminLogin";
+import KeywordManager from "./KeywordManager";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import hospitalLogo from './hospital-logo.png';
 import {
@@ -23,6 +27,7 @@ function KeywordCloud() {
   const [lastKeyword, setLastKeyword] = useState("");
   const [lastKeywordTime, setLastKeywordTime] = useState(0);
   const [duplicateError, setDuplicateError] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // 이 부분 추가
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -52,6 +57,13 @@ function KeywordCloud() {
       window.removeEventListener('resize', handleResize);
       clearTimeout(timeoutId);
     };
+  }, []);
+  // 관리자 인증 상태 확인 - 여기에 추가
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(!!user);
+   });
+    return () => unsubscribe();
   }, []);
 
   // 키워드 제출 - 성능 개선
@@ -258,6 +270,8 @@ function KeywordCloud() {
       boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
       fontFamily: "'Noto Sans KR', sans-serif"
     }}>
+      {/* 관리자 로그인 영역 */}
+      <AdminLogin isAdmin={isAdmin} setIsAdmin={setIsAdmin} />
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.5rem" }}>
         <img src={hospitalLogo} alt="광주365재활병원 로고" style={{
           height: windowSize.width < 576 ? "60px" : "80px",
@@ -384,7 +398,8 @@ function KeywordCloud() {
           </div>
         </div>
       )}
-      
+      {/* 관리자용 키워드 관리 영역 */}
+      <KeywordManager words={words} isAdmin={isAdmin} />
       {/* 애니메이션 스타일 정의 */}
       <style>
         {`

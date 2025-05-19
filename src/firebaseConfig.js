@@ -1,6 +1,7 @@
 // src/firebaseConfig.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth"; // 이 줄 추가
 
 // Firebase 프로젝트 설정 정보
 const firebaseConfig = {
@@ -18,3 +19,6 @@ const app = initializeApp(firebaseConfig);
 
 // Firestore 연결
 export const firestore = getFirestore(app);
+
+// Auth 연결 (이 부분 추가)
+export const auth = getAuth(app);
