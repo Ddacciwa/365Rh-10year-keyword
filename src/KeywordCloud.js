@@ -391,7 +391,7 @@ function KeywordCloud() {
           fontWeight: "700",
           margin: "0.5rem 0",
           textAlign: "center"
-        }}>광주365재활병원이 바라보는 앞으로의 핵심 키워드</h2>
+        }}>광주365재활병원 직원이이 바라보는 앞으로의 핵심 키워드</h2>
         <p style={{ textAlign: "center", color: "#666", fontSize: windowSize.width < 576 ? "0.85rem" : "0.95rem" }}>
           본원이 지향하는 미래에 대한 키워드들을 선정하여 인포그래픽으로 도식화하여 소개
         </p>
