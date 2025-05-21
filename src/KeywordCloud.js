@@ -305,7 +305,7 @@ function KeywordCloud() {
   // 1~10회 등록 시 점진적으로 커지는 폰트 크기 함수
   const calculateFontSize = useCallback((value) => {
     const minSize = 12; // 1회 등록 시 최소 크기
-    const maxSize = 50; // 10회 등록 시 최대 크기
+    const maxSize = 53; // 10회 등록 시 최대 크기
     
     // 1~10회 범위 내에서 점진적으로 증가
     if (value <= 10) {
@@ -313,14 +313,14 @@ function KeywordCloud() {
       return minSize + ((value - 1) / 9) * (maxSize - minSize);
     } else {
       // 10회 초과는 최대 크기로 고정
-      return maxSize;
+      return maxSize + (value - 10) * 2;
     }
   }, []);
 
   const containerHeight = useMemo(() => {
-    if (windowSize.width < 576) return 400;
-    if (windowSize.width < 992) return 500;
-    return 600;
+    if (windowSize.width < 576) return 500;
+    if (windowSize.width < 992) return 600;
+    return 700;
   }, [windowSize.width]);
 
   const maxWords = useMemo(() => {
@@ -329,35 +329,61 @@ function KeywordCloud() {
     return 100;
   }, [windowSize.width]);
 
-  const getWordColor = useCallback((word) => {
-    let hash = 0;
-    for (let i = 0; i < word.length; i++) {
-      hash = word.charCodeAt(i) + ((hash << 5) - hash);
+  const getWordColor = useCallback((word, value) => {
+    // value 파라미터가 없으면 단어 객체에서 value 값을 찾습니다
+    const wordValue = value || (typeof word === 'object' ? word.value : 1);
+    
+    // 가치에 따라 색상 그룹 적용
+    if (wordValue > 7) {
+      // 중요 키워드는 강조색 (파란색/빨간색 계열)
+      return [colorPalette[0], colorPalette[1], colorPalette[5], colorPalette[6], colorPalette[8]][Math.floor(Math.random() * 5)];
+    } else if (wordValue > 3) {
+      // 중간 중요도는 보조색 (녹색/노란색 계열)
+      return [colorPalette[10], colorPalette[11], colorPalette[15], colorPalette[18], colorPalette[20]][Math.floor(Math.random() * 5)];
+    } else {
+      // 적은 언급은 다양한 색상 (주황색/보라색/기타 계열)
+      return [colorPalette[17], colorPalette[16], colorPalette[21], colorPalette[24], colorPalette[13]][Math.floor(Math.random() * 5)];
     }
-    return colorPalette[Math.abs(hash) % colorPalette.length];
   }, [colorPalette]);
 
-  const positions = useMemo(() => {
-    const positions = [];
-    const totalWords = Math.min(words.length, maxWords);
-    const gridSize = Math.max(6, Math.ceil(Math.sqrt(totalWords * 1.5)));
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        const x = 10 + (col * 80 / gridSize);
-        const y = 10 + (row * 80 / gridSize);
-        const jitterX = (Math.random() - 0.5) * 15;
-        const jitterY = (Math.random() - 0.5) * 15;
-        positions.push({
-          left: `${Math.max(5, Math.min(95, x + jitterX))}%`,
-          top: `${Math.max(5, Math.min(95, y + jitterY))}%`
-        });
-        if (positions.length >= totalWords) break;
-      }
-      if (positions.length >= totalWords) break;
-    }
-    return positions;
-  }, [words.length, maxWords]);
+  // //const positions = useMemo(() => {
+  //   const positions = [];
+  //   const totalWords = Math.min(words.length, maxWords);
+  //   const gridSize = Math.max(8, Math.ceil(Math.sqrt(totalWords * 2))); // 간격 확대
 
+  //     // 이미 사용된 위치를 추적하는 배열
+  // const usedPositions = [];
+
+  //   for (let row = 0; row < gridSize; row++) {
+  //     for (let col = 0; col < gridSize; col++) {
+  //       const x = 10 + (col * 80 / gridSize);
+  //       const y = 10 + (row * 80 / gridSize);
+  //       const jitterX = (Math.random() - 0.5) * 10;
+  //       const jitterY = (Math.random() - 0.5) * 10;
+        
+  //       const newPos = {
+  //         left: `${Math.max(5, Math.min(95, x + jitterX))}%`,
+  //         top: `${Math.max(5, Math.min(95, y + jitterY))}%`
+  //       };  
+
+  //        // 기존 위치와 충돌하는지 확인
+  //        const collision = usedPositions.some(pos => {
+  //         const xDiff = parseFloat(pos.left) - parseFloat(newPos.left);
+  //         const yDiff = parseFloat(pos.top) - parseFloat(newPos.top);
+  //         return Math.sqrt(xDiff * xDiff + yDiff * yDiff) < 10; // 최소 거리 설정
+  //       });
+        
+  //       if (!collision) {
+  //         positions.push(newPos);
+  //         usedPositions.push(newPos);
+  //       }
+        
+  //       if (positions.length >= totalWords) break;
+  //     }
+  //     if (positions.length >= totalWords) break;
+  //   }
+  //   return positions;
+  // }, [words.length, maxWords]);
   const uniqueWords = useMemo(() => {
     return Array.from(new Map(words.map(item => [item.text, item])).values());
   }, [words]);
@@ -463,41 +489,88 @@ function KeywordCloud() {
         </div>
       ) : (
         <div style={{
-          position: "relative", height: containerHeight,
-          marginTop: "1rem", backgroundColor: "#f9f9f9",
-          borderRadius: "12px", overflow: "hidden", border: "1px solid #f0f0f0"
+          position: "relative", 
+          height: containerHeight,
+          marginTop: "1rem", 
+          background: "radial-gradient(circle, #ffffff 0%, #f9f9f9 70%, #f0f0f0 100%)",
+          borderRadius: "12px", 
+          overflow: "hidden", 
+          border: "1px solid #e0e0e0",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
         }}>
-          {sortedWords.map((word, index) => {
-            const position = positions[index % positions.length];
-            const fontSize = calculateFontSize(word.value);
-            const color = getWordColor(word.text);
-            
-            // 언급 횟수에 따른 글자 굵기 조정
-            const fontWeight = word.value > 7 ? "700" : word.value > 3 ? "600" : "500";
-            
-            return (
-              <div key={word.id || word.text} style={{
-                position: "absolute", 
-                left: position.left, 
-                top: position.top,
-                transform: `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 3) * (Math.random() > 0.5 ? 1 : -1)}deg)`,
-                fontSize: `${fontSize}px`, 
-                color, 
-                fontWeight,
-                opacity: word.completed ? 0.7 : 0.9, // 완료된 키워드는 흐리게
-                textDecoration: word.completed ? "line-through" : "none", // 완료된 키워드는 취소선
-                textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)", // 중요 키워드는 그림자 효과
-                borderBottom: word.important ? `2px solid ${color}` : "none", // 중요 키워드는 밑줄
-                userSelect: "none", 
-                whiteSpace: "nowrap",
-                transition: "all 0.3s ease", // 부드러운 크기 변경
-                zIndex: Math.floor(word.value * 10),
-                animation: `fadeIn 0.5s ease-out both` // 부드러운 등장 애니메이션
-              }} title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요' : ''}${word.completed ? ' - 완료됨' : ''}`}>
-                {word.text}
-              </div>
-            );
-          })}
+       
+
+       {sortedWords.map((word, index) => {
+  const fontSize = calculateFontSize(word.value);
+  const color = getWordColor(word.text);
+  const fontWeight = word.value > 7 ? "700" : word.value > 3 ? "600" : "500";
+  
+  // 위치 로직을 별도 함수로 분리
+  const getPosition = () => {
+    if (word.value > 7) {
+      // 큰 글자는 중앙에 배치 (중앙 30% 영역 내에)
+      return {
+        left: `${40 + Math.random() * 20}%`,
+        top: `${40 + Math.random() * 20}%`
+      };
+    } else if (word.value > 3) {
+      // 중간 크기 글자는 중간 영역에 배치 (중앙에서 30~60% 영역)
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 25 + Math.random() * 15;
+      return {
+        left: `${50 + Math.cos(angle) * distance}%`,
+        top: `${50 + Math.sin(angle) * distance}%`
+      };
+    } else {
+      // 작은 글자는 외곽에 배치 (60~90% 영역)
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 40 + Math.random() * 35;
+      return {
+        left: `${50 + Math.cos(angle) * distance/2}%`,
+        top: `${50 + Math.sin(angle) * distance/2}%`
+      };
+    }
+  };
+  
+  const position = getPosition();
+  
+  return (
+    <div key={word.id || word.text} 
+      style={{
+        position: "absolute", 
+        left: position.left, 
+        top: position.top,
+        transform: `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1)}deg)`,
+        fontSize: `${fontSize}px`, 
+        color, 
+        fontWeight,
+        opacity: word.completed ? 0.7 : 1,
+        textDecoration: word.completed ? "line-through" : "none",
+        textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)",
+        borderBottom: word.important ? `2px solid ${color}` : "none",
+        userSelect: "none", 
+        whiteSpace: "nowrap",
+        transition: "all 0.5s ease",
+        zIndex: Math.floor(word.value * 10),
+        animation: `fadeIn 0.5s ease-out both, float ${3 + Math.random() * 2}s ease-in-out infinite`
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.transform = "translate(-50%, -50%) scale(1.2)";
+        e.target.style.zIndex = "1000";
+        e.target.style.textShadow = `0 0 10px ${color}`;
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.transform = `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1)}deg)`;
+        e.target.style.zIndex = Math.floor(word.value * 10);
+        e.target.style.textShadow = word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)";
+      }}
+      title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요' : ''}${word.completed ? ' - 완료됨' : ''}`}
+    >
+      {word.text}
+    </div>
+  );
+})}
+         
           <div style={{
             position: "absolute", bottom: "15px", left: "0", right: "0",
             textAlign: "center", fontSize: "0.85rem", color: "#888",
@@ -511,20 +584,28 @@ function KeywordCloud() {
       {/* 관리자용 키워드 관리 영역 */}
       <KeywordManager words={words} isAdmin={isAdmin} />
       {/* 애니메이션 스타일 정의 */}
-      <style>
-        {`
-          @keyframes fadeIn {
-            0% {
-              opacity: 0;
-              transform: translate(-50%, -50%) scale(0.9);
-            }
-            100% {
-              opacity: 0.9;
-              transform: translate(-50%, -50%) scale(1);
-            }
-          }
-        `}
-      </style>
+      {/* 애니메이션 스타일 정의 */}
+<style>
+  {`
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    
+    @keyframes float {
+      0% { transform: translate(-50%, -50%) translateY(0px); }
+      50% { transform: translate(-50%, -50%) translateY(-5px); }
+      100% { transform: translate(-50%, -50%) translateY(0px); }
+    }
+  `}
+</style>
+      
     </div>
   );
 }
