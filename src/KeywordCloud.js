@@ -1,4 +1,4 @@
-// KeywordCloud.js - ESLint 경고 비활성화 주석 추가
+// KeywordCloud.js - 글자 겹침 방지 및 원형 배치 개선
 import { ref, set, update, onValue, get } from "firebase/database";
 import { database } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
@@ -40,10 +40,10 @@ function KeywordCloud() {
   });
 
   const colorPalette = useMemo(() => [
-    "#0057A8", "#76B82A", "#FF8300", "#222222", "#1E88E5", 
-    "#43A047", "#E53935", "#FB8C00", "#8E24AA", "#00ACC1", 
-    "#7CB342", "#FFB300", "#5E35B1", "#00897B", "#C0CA33", 
-    "#F4511E", "#039BE5", "#D81B60", "#6D4C41", "#546E7A"
+    "#4A90E2", "#7ED321", "#FFB800", "#50E3C2", "#5B8FF9", 
+    "#5AD8A6", "#FF99C3", "#FFC53D", "#B37FEB", "#00D2FF", 
+    "#9AE65C", "#FFD666", "#9254DE", "#36CFC9", "#D6E77F", 
+    "#FF7A45", "#40A9FF", "#FF85C0", "#A6A6A6", "#8C8C8C"
   ], []);
 
   // 창 크기 변경 감지
@@ -337,26 +337,107 @@ function KeywordCloud() {
     return colorPalette[Math.abs(hash) % colorPalette.length];
   }, [colorPalette]);
 
-  const positions = useMemo(() => {
+  // 개선된 위치 계산 함수 - 겹침 방지 및 원형 배치
+  const calculatePositions = useCallback((sortedWords, containerWidth, containerHeight) => {
     const positions = [];
-    const totalWords = Math.min(words.length, maxWords);
-    const gridSize = Math.max(6, Math.ceil(Math.sqrt(totalWords * 1.5)));
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        const x = 10 + (col * 80 / gridSize);
-        const y = 10 + (row * 80 / gridSize);
-        const jitterX = (Math.random() - 0.5) * 15;
-        const jitterY = (Math.random() - 0.5) * 15;
-        positions.push({
-          left: `${Math.max(5, Math.min(95, x + jitterX))}%`,
-          top: `${Math.max(5, Math.min(95, y + jitterY))}%`
-        });
-        if (positions.length >= totalWords) break;
+    const occupiedSpaces = [];
+    const centerX = containerWidth / 2;
+    const centerY = containerHeight / 2;
+    
+    // 텍스트 크기 예측 함수
+    const estimateTextDimensions = (text, fontSize) => {
+      const avgCharWidth = fontSize * 0.6; // 한글 기준 평균 문자 폭
+      const width = text.length * avgCharWidth;
+      const height = fontSize * 1.2;
+      return { width, height };
+    };
+
+    // 겹침 검사 함수
+    const isOverlapping = (newBox, existingBoxes, minDistance = 10) => {
+      return existingBoxes.some(box => {
+        const horizontalOverlap = (newBox.left < box.right + minDistance) && 
+                                 (newBox.right + minDistance > box.left);
+        const verticalOverlap = (newBox.top < box.bottom + minDistance) && 
+                               (newBox.bottom + minDistance > box.top);
+        return horizontalOverlap && verticalOverlap;
+      });
+    };
+
+    // 나선형으로 위치 찾기
+    const findSpiralPosition = (textDims, fontSize) => {
+      const maxRadius = Math.min(containerWidth, containerHeight) * 0.4;
+      let angle = 0;
+      let radius = fontSize; // 중심부터 시작
+      
+      while (radius < maxRadius) {
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        
+        // 컨테이너 경계 확인
+        if (x - textDims.width/2 < 0 || x + textDims.width/2 > containerWidth ||
+            y - textDims.height/2 < 0 || y + textDims.height/2 > containerHeight) {
+          angle += 0.3;
+          if (angle > Math.PI * 2) {
+            angle = 0;
+            radius += fontSize * 0.5;
+          }
+          continue;
+        }
+        
+        const newBox = {
+          left: x - textDims.width/2,
+          top: y - textDims.height/2,
+          right: x + textDims.width/2,
+          bottom: y + textDims.height/2
+        };
+        
+        if (!isOverlapping(newBox, occupiedSpaces)) {
+          occupiedSpaces.push(newBox);
+          return { x, y };
+        }
+        
+        angle += 0.3; // 각도 증가
+        if (angle > Math.PI * 2) {
+          angle = 0;
+          radius += fontSize * 0.3; // 반지름 증가
+        }
       }
-      if (positions.length >= totalWords) break;
-    }
+      
+      // 적절한 위치를 찾지 못한 경우 랜덤 위치 반환
+      return {
+        x: Math.random() * (containerWidth - textDims.width) + textDims.width/2,
+        y: Math.random() * (containerHeight - textDims.height) + textDims.height/2
+      };
+    };
+
+    sortedWords.forEach((word, index) => {
+      const fontSize = calculateFontSize(word.value);
+      const textDims = estimateTextDimensions(word.text, fontSize);
+      
+      let position;
+      
+      if (index === 0) {
+        // 첫 번째 단어는 중심에 배치
+        position = { x: centerX, y: centerY };
+        occupiedSpaces.push({
+          left: centerX - textDims.width/2,
+          top: centerY - textDims.height/2,
+          right: centerX + textDims.width/2,
+          bottom: centerY + textDims.height/2
+        });
+      } else {
+        // 나머지 단어들은 나선형으로 배치
+        position = findSpiralPosition(textDims, fontSize);
+      }
+      
+      positions.push({
+        left: `${(position.x / containerWidth) * 100}%`,
+        top: `${(position.y / containerHeight) * 100}%`
+      });
+    });
+    
     return positions;
-  }, [words.length, maxWords]);
+  }, [calculateFontSize]);
 
   const uniqueWords = useMemo(() => {
     return Array.from(new Map(words.map(item => [item.text, item])).values());
@@ -367,6 +448,16 @@ function KeywordCloud() {
       .sort((a, b) => b.value - a.value)
       .slice(0, maxWords);
   }, [uniqueWords, maxWords]);
+
+  // 위치 계산
+  const positions = useMemo(() => {
+    if (sortedWords.length === 0) return [];
+    
+    const containerWidth = windowSize.width < 768 ? 
+      Math.min(windowSize.width - 40, 860) : 860;
+    
+    return calculatePositions(sortedWords, containerWidth, containerHeight);
+  }, [sortedWords, windowSize.width, containerHeight, calculatePositions]);
 
   return (
     <div style={{
@@ -463,12 +554,16 @@ function KeywordCloud() {
         </div>
       ) : (
         <div style={{
-          position: "relative", height: containerHeight,
-          marginTop: "1rem", backgroundColor: "#f9f9f9",
-          borderRadius: "12px", overflow: "hidden", border: "1px solid #f0f0f0"
+          position: "relative", 
+          height: containerHeight,
+          marginTop: "1rem", 
+          backgroundColor: "#f9f9f9",
+          borderRadius: "12px", 
+          overflow: "hidden", 
+          border: "1px solid #f0f0f0"
         }}>
           {sortedWords.map((word, index) => {
-            const position = positions[index % positions.length];
+            const position = positions[index] || { left: "50%", top: "50%" };
             const fontSize = calculateFontSize(word.value);
             const color = getWordColor(word.text);
             
@@ -480,19 +575,21 @@ function KeywordCloud() {
                 position: "absolute", 
                 left: position.left, 
                 top: position.top,
-                transform: `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 3) * (Math.random() > 0.5 ? 1 : -1)}deg)`,
+                transform: "translate(-50%, -50%)",
                 fontSize: `${fontSize}px`, 
                 color, 
                 fontWeight,
-                opacity: word.completed ? 0.7 : 0.9, // 완료된 키워드는 흐리게
-                textDecoration: word.completed ? "line-through" : "none", // 완료된 키워드는 취소선
-                textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)", // 중요 키워드는 그림자 효과
-                borderBottom: word.important ? `2px solid ${color}` : "none", // 중요 키워드는 밑줄
+                opacity: word.completed ? 0.7 : 0.9,
+                textDecoration: word.completed ? "line-through" : "none",
+                textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)",
+                borderBottom: word.important ? `2px solid ${color}` : "none",
                 userSelect: "none", 
                 whiteSpace: "nowrap",
-                transition: "all 0.3s ease", // 부드러운 크기 변경
+                transition: "all 0.3s ease",
                 zIndex: Math.floor(word.value * 10),
-                animation: `fadeIn 0.5s ease-out both` // 부드러운 등장 애니메이션
+                animation: `fadeIn 0.5s ease-out both`,
+                padding: "2px 4px",
+                borderRadius: "2px"
               }} title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요' : ''}${word.completed ? ' - 완료됨' : ''}`}>
                 {word.text}
               </div>
