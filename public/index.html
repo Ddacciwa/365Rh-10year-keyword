@@ -1,47 +1,240 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="description" content="광주365재활병원 직원이 바라보는 앞으로의 핵심 키워드 - 본원이 지향하는 미래에 대한 키워드들을 선정하여 인포그래픽으로 도식화하여 소개합니다." />
+    <meta name="keywords" content="광주365재활병원, 재활병원, 키워드 클라우드, 병원 비전, 의료진, 환자중심, 전문성, 혁신" />
+    <meta name="author" content="광주365재활병원" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://365-rh-10year-keyword.vercel.app/" />
+    <meta property="og:title" content="광주365재활병원 핵심 키워드 | 미래 비전 공유" />
+    <meta property="og:description" content="광주365재활병원 직원들이 바라보는 미래의 핵심 키워드를 함께 만들어가는 인터랙티브 플랫폼입니다." />
+    <meta property="og:image" content="%PUBLIC_URL%/hospital-logo.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://365-rh-10year-keyword.vercel.app/" />
+    <meta property="twitter:title" content="광주365재활병원 핵심 키워드 | 미래 비전 공유" />
+    <meta property="twitter:description" content="광주365재활병원 직원들이 바라보는 미래의 핵심 키워드를 함께 만들어가는 인터랙티브 플랫폼입니다." />
+    <meta property="twitter:image" content="%PUBLIC_URL%/hospital-logo.png" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/hospital-logo.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-<!-- public/index.html에 아래 코드 추가 (head 태그 내에) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="%PUBLIC_URL%/hospital-logo.png" as="image" type="image/png">
+    
+    <title>광주365재활병원 핵심 키워드 | 미래 비전 공유</title>
+    
+    <!-- Modern CSS Reset and Base Styles -->
+    <style>
+      /* Modern CSS Reset */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      
+      html, body {
+        height: 100%;
+        font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      
+      body {
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+      }
+      
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Loading animation */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 2rem;
+        animation: pulse 2s infinite;
+      }
+      
+      .loading-text {
+        color: #1e40af;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #1e40af;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Hide loading when React loads */
+      .loaded .loading-container {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      /* Accessibility improvements */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      
+      /* Focus indicators */
+      :focus-visible {
+        outline: 2px solid #1e40af;
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+      
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Print styles */
+      @media print {
+        body {
+          background: white !important;
+        }
+        
+        .loading-container {
+          display: none !important;
+        }
+      }
+    </style>
+    
+    <!-- Performance monitoring -->
+    <script>
+      // Performance monitoring
+      window.addEventListener('load', function() {
+        if ('performance' in window) {
+          const perfData = performance.getEntriesByType('navigation')[0];
+          console.log('Page load time:', perfData.loadEventEnd - perfData.fetchStart, 'ms');
+        }
+      });
+      
+      // Add loaded class when React is ready
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+          document.body.classList.add('loaded');
+        }, 100);
+      });
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-family: 'Noto Sans KR', sans-serif;
+        color: #374151;
+        padding: 2rem;
+      ">
+        <h1 style="font-size: 2rem; margin-bottom: 1rem; color: #1e40af;">광주365재활병원</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 1rem;">이 웹사이트를 이용하려면 JavaScript를 활성화해주세요.</p>
+        <p style="font-size: 1rem; color: #6b7280;">You need to enable JavaScript to run this app.</p>
+      </div>
+    </noscript>
+    
+    <!-- Loading screen -->
+    <div class="loading-container" id="loading">
+      <div class="loading-logo">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="40" stroke="#1e40af" stroke-width="4" fill="none" opacity="0.3"/>
+          <circle cx="50" cy="50" r="30" stroke="#059669" stroke-width="3" fill="none" opacity="0.5"/>
+          <circle cx="50" cy="50" r="20" stroke="#ea580c" stroke-width="2" fill="none" opacity="0.7"/>
+          <text x="50" y="55" text-anchor="middle" font-family="Arial" font-size="12" fill="#1e40af" font-weight="bold">365</text>
+        </svg>
+      </div>
+      <div class="loading-text">광주365재활병원</div>
+      <div class="loading-spinner"></div>
+    </div>
+    
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    
+    <!-- Google Analytics or other analytics can be added here -->
+    <!-- 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
     -->
   </body>
 </html>
