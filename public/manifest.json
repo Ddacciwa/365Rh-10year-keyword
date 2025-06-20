@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "광주365병원 키워드",
+  "name": "광주365재활병원 핵심 키워드",
+  "description": "광주365재활병원 직원이 바라보는 앞으로의 핵심 키워드를 함께 만들어가는 플랫폼",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +9,30 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "hospital-logo.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "hospital-logo.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#1e40af",
+  "background_color": "#f8fafc",
+  "scope": "/",
+  "lang": "ko",
+  "categories": ["medical", "healthcare", "productivity", "business"],
+  "screenshots": [
+    {
+      "src": "hospital-logo.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "form_factor": "wide"
+    }
+  ]
 }
