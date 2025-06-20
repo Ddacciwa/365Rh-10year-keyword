@@ -1,13 +1,15 @@
-/* src/App.css */
+/* Modern Professional Hospital UI - App.css */
 .App {
   text-align: center;
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f6fc 0%, #e3f2fd 50%, #f9f9f9 100%);
-  padding: 20px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+  padding: 0;
   position: relative;
+  overflow-x: hidden;
 }
 
+/* Modern gradient background with subtle patterns */
 .App::before {
   content: '';
   position: fixed;
@@ -16,67 +18,164 @@
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(0, 87, 168, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(118, 184, 42, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 40% 60%, rgba(255, 131, 0, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 15% 25%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
 
-/* 로고 컨테이너 스타일 */
-.logo-container {
+/* Header area improvements */
+.header-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
   position: relative;
-  display: inline-block;
-  margin-bottom: 20px;
 }
 
-.logo-container::after {
+.header-section::after {
   content: '';
   position: absolute;
-  bottom: -10px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
+  width: 100px;
   height: 3px;
-  background: linear-gradient(90deg, #0057A8, #76B82A, #FF8300);
+  background: linear-gradient(90deg, #3b82f6, #10b981, #f97316);
   border-radius: 2px;
 }
 
-/* 제목 그라데이션 효과 */
+/* Logo container with modern styling */
+.logo-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 
+    0 10px 25px rgba(59, 130, 246, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.logo-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 15px 35px rgba(59, 130, 246, 0.15),
+    0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.hospital-logo {
+  height: 80px;
+  width: auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+/* Modern typography */
 .main-title {
-  background: linear-gradient(135deg, #0057A8 0%, #76B82A 50%, #FF8300 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #059669 50%, #ea580c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 87, 168, 0.1);
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  line-height: 1.2;
+  margin: 1rem 0;
+  letter-spacing: -0.02em;
 }
 
-/* 입력 영역 스타일 개선 */
+.subtitle {
+  color: #64748b;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 400;
+}
+
+/* Enhanced input container */
 .input-container {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 700px;
   box-shadow: 
-    0 8px 32px rgba(0, 87, 168, 0.1),
-    0 4px 16px rgba(118, 184, 42, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+    0 20px 50px rgba(59, 130, 246, 0.08),
+    0 8px 25px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-/* 버튼 스타일 개선 */
+.input-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #3b82f6, #10b981, #f97316, transparent);
+  opacity: 0.6;
+}
+
+.input-group {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+/* Modern input field */
+.keyword-input {
+  flex: 1;
+  min-width: 250px;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  font-family: inherit;
+}
+
+.keyword-input:focus {
+  border-color: #3b82f6;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 0 0 4px rgba(59, 130, 246, 0.1),
+    0 8px 25px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.keyword-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Premium button design */
 .submit-button {
-  background: linear-gradient(135deg, #0057A8 0%, #004a96 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
+  border-radius: 16px;
+  padding: 1rem 2rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-width: 120px;
+  box-shadow: 
+    0 4px 14px rgba(30, 64, 175, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .submit-button::before {
@@ -86,61 +185,43 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 28px rgba(30, 64, 175, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
 }
 
 .submit-button:hover::before {
   left: 100%;
 }
 
-.submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 8px 25px rgba(0, 87, 168, 0.3),
-    0 4px 12px rgba(0, 87, 168, 0.2);
-}
-
 .submit-button:active {
-  transform: translateY(1px);
+  transform: translateY(0);
   box-shadow: 
-    0 2px 8px rgba(0, 87, 168, 0.4),
+    0 4px 14px rgba(30, 64, 175, 0.5),
     inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 입력 필드 스타일 */
-.keyword-input {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 1rem;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
-  outline: none;
-}
-
-.keyword-input:focus {
-  border-color: #0057A8;
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 
-    0 0 0 3px rgba(0, 87, 168, 0.1),
-    0 4px 12px rgba(0, 87, 168, 0.15);
-}
-
-/* 워드클라우드 컨테이너 개선 */
+/* Enhanced wordcloud container */
 .wordcloud-container {
   background: 
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%),
-    linear-gradient(45deg, rgba(0, 87, 168, 0.02) 0%, rgba(118, 184, 42, 0.02) 50%, rgba(255, 131, 0, 0.02) 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(0, 87, 168, 0.1);
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
   box-shadow: 
-    0 20px 40px rgba(0, 87, 168, 0.08),
-    0 8px 24px rgba(118, 184, 42, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 25px 60px rgba(59, 130, 246, 0.06),
+    0 10px 30px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   position: relative;
   overflow: hidden;
+  margin: 2rem auto;
+  max-width: 1000px;
 }
 
 .wordcloud-container::before {
@@ -149,84 +230,165 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 87, 168, 0.3), rgba(118, 184, 42, 0.3), rgba(255, 131, 0, 0.3), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #3b82f6, #10b981, #f97316, transparent);
+  opacity: 0.8;
 }
 
-/* 상태 표시 영역 */
+/* Status messages with modern design */
 .status-area {
-  margin: 16px 0;
-  min-height: 40px;
+  margin: 1.5rem 0;
+  min-height: 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1rem;
 }
 
 .error-message {
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
-  border: 1px solid rgba(244, 67, 54, 0.2);
-  color: #d32f2f;
-  padding: 12px 16px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
   backdrop-filter: blur(10px);
+  font-weight: 500;
+  animation: slideInFromTop 0.3s ease-out;
 }
 
 .duplicate-message {
-  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
-  border: 1px solid rgba(255, 152, 0, 0.2);
-  color: #f57c00;
-  padding: 12px 16px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #d97706;
+  padding: 1rem 1.5rem;
+  border-radius: 16px;
   backdrop-filter: blur(10px);
+  font-weight: 500;
+  animation: slideInFromTop 0.3s ease-out;
 }
 
-/* 카운터 영역 스타일 */
+/* Counter area with premium styling */
 .counter-area {
-  background: linear-gradient(135deg, rgba(0, 87, 168, 0.05), rgba(118, 184, 42, 0.05));
-  border-radius: 12px;
-  padding: 8px 16px;
-  margin-top: 12px;
-  border: 1px solid rgba(0, 87, 168, 0.1);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.06));
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(59, 130, 246, 0.15);
   backdrop-filter: blur(10px);
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
+/* Loading state */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #3b82f6;
+  font-weight: 500;
+  padding: 4rem 2rem;
+}
+
+.loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive design improvements */
 @media (max-width: 768px) {
   .App {
-    padding: 10px;
+    padding: 0;
+  }
+  
+  .header-section {
+    padding: 1.5rem 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .logo-container {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .hospital-logo {
+    height: 60px;
   }
   
   .input-container {
-    padding: 16px;
-    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    margin: 1rem;
+    border-radius: 20px;
   }
   
-  .submit-button {
-    padding: 10px 20px;
-    font-size: 0.9rem;
+  .input-group {
+    flex-direction: column;
+    gap: 1rem;
   }
   
   .keyword-input {
-    padding: 10px 14px;
-    font-size: 0.9rem;
+    min-width: auto;
+    padding: 0.875rem 1.25rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .submit-button {
+    padding: 0.875rem 1.5rem;
+    width: 100%;
+  }
+  
+  .wordcloud-container {
+    margin: 1rem;
+    border-radius: 20px;
   }
 }
 
-/* 로딩 애니메이션 */
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 1.4rem;
+    line-height: 1.3;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
+  
+  .input-container {
+    padding: 1.25rem 0.75rem;
+  }
+  
+  .counter-area {
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+  }
 }
 
-.loading {
-  animation: pulse 2s infinite;
-  color: #0057A8;
+/* Modern animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* 페이드인 애니메이션 개선 */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -235,5 +397,46 @@
 }
 
 .fade-in {
-  animation: fadeInUp 0.6s ease-out;
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced hover effects for words */
+.word-hover-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.word-hover-effect:hover {
+  filter: brightness(1.1) contrast(1.1);
+  text-shadow: 0 0 20px currentColor;
+}
+
+/* Glass morphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Improved focus indicators for accessibility */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Dark mode support preparation */
+@media (prefers-color-scheme: dark) {
+  .App {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  }
+  
+  .main-title {
+    background: linear-gradient(135deg, #60a5fa 0%, #34d399 50%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    color: #94a3b8;
+  }
 }
