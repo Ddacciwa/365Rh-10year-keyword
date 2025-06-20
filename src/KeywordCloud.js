@@ -1,4 +1,4 @@
-// KeywordCloud.js - ESLint 경고 비활성화 주석 추가
+// Modern Professional KeywordCloud Component
 import { ref, set, update, onValue, get } from "firebase/database";
 import { database } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
@@ -15,10 +15,8 @@ import {
   where,
   updateDoc,
   increment,
-  // eslint-disable-next-line no-unused-vars
   onSnapshot,
   serverTimestamp,
-  // eslint-disable-next-line no-unused-vars
   orderBy
 } from "firebase/firestore";
 import { firestore } from "./firebaseConfig";
@@ -39,14 +37,16 @@ function KeywordCloud() {
     height: window.innerHeight
   });
 
+  // Modern professional color palette
   const colorPalette = useMemo(() => [
-    "#0057A8", "#76B82A", "#FF8300", "#222222", "#1E88E5", 
-    "#43A047", "#E53935", "#FB8C00", "#8E24AA", "#00ACC1", 
-    "#7CB342", "#FFB300", "#5E35B1", "#00897B", "#C0CA33", 
-    "#F4511E", "#039BE5", "#D81B60", "#6D4C41", "#546E7A"
+    "#1e40af", "#059669", "#dc2626", "#ea580c", "#7c3aed", 
+    "#0891b2", "#65a30d", "#ca8a04", "#be123c", "#9333ea",
+    "#0284c7", "#16a34a", "#dc2626", "#ea580c", "#8b5cf6",
+    "#0e7490", "#4d7c0f", "#a16207", "#be185d", "#7c2d12",
+    "#1e3a8a", "#064e3b", "#991b1b", "#9a3412", "#581c87"
   ], []);
 
-  // 창 크기 변경 감지
+  // 창 크기 변경 감지 (디바운스 적용)
   useEffect(() => {
     let timeoutId;
     const handleResize = () => {
@@ -111,7 +111,6 @@ function KeywordCloud() {
         if (data) {
           console.log("수신된 데이터:", data);
           
-          // 객체를 배열로 변환 (모든 필드 포함)
           const keywordList = Object.entries(data).map(([id, val]) => ({
             id,
             text: val.text,
@@ -122,26 +121,21 @@ function KeywordCloud() {
             updatedAt: val.updatedAt || ""
           }));
           
-          // 기존 데이터와 병합 (값이 줄어들지 않도록)
           setWords(prevWords => {
             const wordMap = new Map();
             
-            // 기존 데이터 먼저 맵에 추가
             prevWords.forEach(word => {
               const key = word.id || word.text;
               wordMap.set(key, word);
             });
             
-            // 새 데이터로 맵 업데이트 (값이 더 큰 경우에만)
             keywordList.forEach(newWord => {
               const key = newWord.id || newWord.text;
               const existingWord = wordMap.get(key);
               
               if (!existingWord) {
-                // 새 단어면 그대로 추가
                 wordMap.set(key, newWord);
               } else {
-                // 기존 단어면 값, 상태 등 업데이트
                 wordMap.set(key, {
                   ...existingWord,
                   value: Math.max(existingWord.value, newWord.value),
@@ -153,7 +147,6 @@ function KeywordCloud() {
               }
             });
             
-            // 맵을 배열로 변환하여 반환
             return Array.from(wordMap.values());
           });
         } else {
@@ -177,10 +170,11 @@ function KeywordCloud() {
     }
   }, [keywordsRef]);
 
-  // 키워드 제출 함수
+  // 키워드 제출 함수 개선
   const handleSubmit = useCallback(async () => {
     const keyword = input.trim();
     if (!keyword) return;
+    
     const currentTime = new Date().getTime();
     if (keyword === lastKeyword && currentTime - lastKeywordTime < 10000) {
       setDuplicateError(true);
@@ -188,80 +182,49 @@ function KeywordCloud() {
       return;
     }
 
-    // 버튼 클릭 효과 강화
     setButtonClicked(true);
     setTimeout(() => setButtonClicked(false), 300);
 
     try {
-      // 로컬 UI 즉시 업데이트 (Firebase 응답 전)
       setWords(prev => {
-        // 기존 단어를 찾습니다
         const found = prev.find(w => w.text === keyword);
         if (found) {
-          // 기존 단어가 있으면 값을 증가시킵니다
           return prev.map(w => w.text === keyword ? {...w, value: w.value + 1} : w);
         } else {
-          // 새 단어를 추가합니다
           return [...prev, {text: keyword, value: 1}];
         }
       });
 
-      // 입력창 비우기 (즉시 응답성 향상)
       setInput("");
       setLastKeyword(keyword);
       setLastKeywordTime(currentTime);
 
-      // 현재 시간을 ISO 문자열 형식으로 생성
       const now = new Date().toISOString();
-
-      // 키워드를 소문자로 변환하고 공백을 하이픈으로 대체하여 고유 키로 사용
       const keyId = keyword.toLowerCase().replace(/\s+/g, '-');
-      
-      // Realtime Database에 저장
       const keywordRef = ref(database, `keywords/${keyId}`);
       
       console.log("키워드 저장 시도:", keyword);
       
-      // 해당 키워드가 이미 있는지 확인
       const snapshot = await get(keywordRef);
       
       if (snapshot.exists()) {
-        // 기존 키워드면 값 증가
         const currentValue = snapshot.val().value || 0;
         const isCompleted = snapshot.val().completed || false;
         const isImportant = snapshot.val().important || false;
         
-        console.log("기존 키워드 업데이트:", {
+        await update(keywordRef, {
           text: keyword,
           value: currentValue + 1,
           updatedAt: now,
           completed: isCompleted,
           important: isImportant
         });
-        
-        await update(keywordRef, {
-          text: keyword,
-          value: currentValue + 1,
-          updatedAt: now,  // ISO 문자열 형식으로 저장
-          completed: isCompleted,  // 기존 값 유지
-          important: isImportant   // 기존 값 유지
-        });
       } else {
-        // 새 키워드면 생성
-        console.log("새 키워드 생성:", {
+        await set(keywordRef, {
           text: keyword,
           value: 1,
           createdAt: now,
           updatedAt: now,
-          completed: false,
-          important: false
-        });
-        
-        await set(keywordRef, {
-          text: keyword,
-          value: 1,
-          createdAt: now,  // ISO 문자열 형식으로 저장
-          updatedAt: now,  // ISO 문자열 형식으로 저장
           completed: false,
           important: false
         });
@@ -302,88 +265,45 @@ function KeywordCloud() {
     }
   }, [handleSubmit]);
 
-  // 1~10회 등록 시 점진적으로 커지는 폰트 크기 함수
+  // 개선된 폰트 크기 계산 함수
   const calculateFontSize = useCallback((value) => {
-    const minSize = 12; // 1회 등록 시 최소 크기
-    const maxSize = 53; // 10회 등록 시 최대 크기
+    const minSize = 14;
+    const maxSize = 60;
     
-    // 1~10회 범위 내에서 점진적으로 증가
-    if (value <= 10) {
-      // 균일한 증가 (선형 증가 - 매 번 동일한 비율로 커짐)
-      return minSize + ((value - 1) / 9) * (maxSize - minSize);
+    if (value <= 15) {
+      return minSize + ((value - 1) / 14) * (maxSize - minSize);
     } else {
-      // 10회 초과는 최대 크기로 고정
-      return maxSize + (value - 10) * 2;
+      return maxSize + (value - 15) * 1.5;
     }
   }, []);
 
   const containerHeight = useMemo(() => {
-    if (windowSize.width < 576) return 500;
-    if (windowSize.width < 992) return 600;
-    return 700;
+    if (windowSize.width < 576) return 450;
+    if (windowSize.width < 992) return 550;
+    return 650;
   }, [windowSize.width]);
 
   const maxWords = useMemo(() => {
-    if (windowSize.width < 576) return 50;
-    if (windowSize.width < 992) return 75;
-    return 100;
+    if (windowSize.width < 576) return 40;
+    if (windowSize.width < 992) return 60;
+    return 80;
   }, [windowSize.width]);
 
+  // 개선된 색상 선택 함수
   const getWordColor = useCallback((word, value) => {
-    // value 파라미터가 없으면 단어 객체에서 value 값을 찾습니다
     const wordValue = value || (typeof word === 'object' ? word.value : 1);
     
-    // 가치에 따라 색상 그룹 적용
-    if (wordValue > 7) {
-      // 중요 키워드는 강조색 (파란색/빨간색 계열)
-      return [colorPalette[0], colorPalette[1], colorPalette[5], colorPalette[6], colorPalette[8]][Math.floor(Math.random() * 5)];
-    } else if (wordValue > 3) {
-      // 중간 중요도는 보조색 (녹색/노란색 계열)
-      return [colorPalette[10], colorPalette[11], colorPalette[15], colorPalette[18], colorPalette[20]][Math.floor(Math.random() * 5)];
+    if (wordValue > 10) {
+      return [colorPalette[0], colorPalette[2], colorPalette[4]][Math.floor(Math.random() * 3)];
+    } else if (wordValue > 5) {
+      return [colorPalette[1], colorPalette[3], colorPalette[6]][Math.floor(Math.random() * 3)];
+    } else if (wordValue > 2) {
+      return [colorPalette[7], colorPalette[8], colorPalette[9]][Math.floor(Math.random() * 3)];
     } else {
-      // 적은 언급은 다양한 색상 (주황색/보라색/기타 계열)
-      return [colorPalette[17], colorPalette[16], colorPalette[21], colorPalette[24], colorPalette[13]][Math.floor(Math.random() * 5)];
+      return [colorPalette[10], colorPalette[11], colorPalette[12]][Math.floor(Math.random() * 3)];
     }
   }, [colorPalette]);
 
-  // //const positions = useMemo(() => {
-  //   const positions = [];
-  //   const totalWords = Math.min(words.length, maxWords);
-  //   const gridSize = Math.max(8, Math.ceil(Math.sqrt(totalWords * 2))); // 간격 확대
-
-  //     // 이미 사용된 위치를 추적하는 배열
-  // const usedPositions = [];
-
-  //   for (let row = 0; row < gridSize; row++) {
-  //     for (let col = 0; col < gridSize; col++) {
-  //       const x = 10 + (col * 80 / gridSize);
-  //       const y = 10 + (row * 80 / gridSize);
-  //       const jitterX = (Math.random() - 0.5) * 10;
-  //       const jitterY = (Math.random() - 0.5) * 10;
-        
-  //       const newPos = {
-  //         left: `${Math.max(5, Math.min(95, x + jitterX))}%`,
-  //         top: `${Math.max(5, Math.min(95, y + jitterY))}%`
-  //       };  
-
-  //        // 기존 위치와 충돌하는지 확인
-  //        const collision = usedPositions.some(pos => {
-  //         const xDiff = parseFloat(pos.left) - parseFloat(newPos.left);
-  //         const yDiff = parseFloat(pos.top) - parseFloat(newPos.top);
-  //         return Math.sqrt(xDiff * xDiff + yDiff * yDiff) < 10; // 최소 거리 설정
-  //       });
-        
-  //       if (!collision) {
-  //         positions.push(newPos);
-  //         usedPositions.push(newPos);
-  //       }
-        
-  //       if (positions.length >= totalWords) break;
-  //     }
-  //     if (positions.length >= totalWords) break;
-  //   }
-  //   return positions;
-  // }, [words.length, maxWords]);
   const uniqueWords = useMemo(() => {
     return Array.from(new Map(words.map(item => [item.text, item])).values());
   }, [words]);
@@ -395,217 +315,262 @@ function KeywordCloud() {
   }, [uniqueWords, maxWords]);
 
   return (
-    <div style={{
-      maxWidth: windowSize.width < 768 ? "100%" : "900px",
-      margin: "30px auto",
-      padding: windowSize.width < 576 ? "1rem" : "2rem",
-      background: "#fff",
-      borderRadius: "12px",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      fontFamily: "'Noto Sans KR', sans-serif"
-    }}>
+    <div className="App">
       {/* 관리자 로그인 영역 */}
       <AdminLogin isAdmin={isAdmin} setIsAdmin={setIsAdmin} />
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "1.5rem" }}>
-        <img src={hospitalLogo} alt="광주365재활병원 로고" style={{
-          height: windowSize.width < 576 ? "60px" : "80px",
-          marginBottom: "15px"
-        }}/>
-        <h2 style={{
-          fontSize: windowSize.width < 576 ? "1.3rem" : "1.6rem",
-          color: "#0057A8",
-          fontWeight: "700",
-          margin: "0.5rem 0",
-          textAlign: "center"
-        }}>광주365재활병원 직원이 바라보는 앞으로의 핵심 키워드</h2>
-        <p style={{ textAlign: "center", color: "#666", fontSize: windowSize.width < 576 ? "0.85rem" : "0.95rem" }}>
-          본원이 지향하는 미래에 대한 키워드들을 선정하여 인포그래픽으로 도식화하여 소개
+      
+      {/* 헤더 섹션 */}
+      <div className="header-section">
+        <div className="logo-container">
+          <img 
+            src={hospitalLogo} 
+            alt="광주365재활병원 로고" 
+            className="hospital-logo"
+          />
+        </div>
+        <h1 className="main-title">
+          광주365재활병원 직원이 바라보는
+          <br />
+          앞으로의 핵심 키워드
+        </h1>
+        <p className="subtitle">
+          본원이 지향하는 미래에 대한 키워드들을 선정하여 인포그래픽으로 도식화하여 소개합니다.
+          <br />
+          여러분의 소중한 의견을 통해 병원의 비전을 함께 만들어갑니다.
         </p>
       </div>
 
-      {/* 입력창 및 버튼 - 클릭 효과 강화 */}
+      {/* 메인 컨테이너 */}
       <div style={{
-        display: "flex", gap: "0.5rem", marginBottom: "2rem", maxWidth: "600px", margin: "0 auto 2rem auto"
+        maxWidth: windowSize.width < 768 ? "100%" : "1200px",
+        margin: "0 auto",
+        padding: windowSize.width < 576 ? "1rem" : "2rem",
       }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="키워드를 입력해주세요 (예: 환자중심, 전문성, 혁신...)"
-          style={{
-            flex: 1, 
-            padding: "0.75rem 1rem", 
-            fontSize: "1rem",
-            border: "1px solid #ddd", 
-            borderRadius: "8px",
-            boxShadow: "inset 0 1px 2px rgba(0,0,0,0.05)"
-          }}
-        />
-        <button
-          onClick={handleSubmit}
-          onMouseDown={() => setButtonClicked(true)}
-          onMouseUp={() => setButtonClicked(false)}
-          onMouseLeave={() => buttonClicked && setButtonClicked(false)}
-          style={{
-            padding: "0.75rem 1.5rem", 
-            fontSize: "1rem",
-            backgroundColor: buttonClicked ? "#00438A" : "#0057A8", // 클릭 시 더 어두운 색상
-            color: "#fff", 
-            border: "none", 
-            borderRadius: "8px", 
-            cursor: "pointer",
-            fontWeight: "500",
-            boxShadow: buttonClicked 
-              ? "0 1px 2px rgba(0, 87, 168, 0.5), inset 0 1px 3px rgba(0,0,0,0.2)" // 클릭 시 내부 그림자
-              : "0 2px 4px rgba(0, 87, 168, 0.3)",
-            transform: buttonClicked ? "translateY(2px) scale(0.98)" : "translateY(0) scale(1)", // 클릭 시 약간 아래로 이동 및 축소
-            transition: "all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275)" // 부드러운 효과
-          }}
-        >등록</button>
-      </div>
-
-      {/* 에러 메시지 */}
-      {error && <div style={{
-        color: "#f44336", textAlign: "center", padding: "0.5rem",
-        backgroundColor: "rgba(244, 67, 54, 0.1)", borderRadius: "4px"
-      }}>{error}</div>}
-
-      {duplicateError && <div style={{
-        color: "#ff9800", textAlign: "center", padding: "0.5rem",
-        backgroundColor: "rgba(255, 152, 0, 0.1)", borderRadius: "4px"
-      }}>
-        <b>{lastKeyword}</b> 키워드를 방금 등록하셨습니다. 잠시 후 다시 시도해주세요.
-      </div>}
-
-      {/* 워드 클라우드 */}
-      {loading && uniqueWords.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#666" }}>
-          데이터 로딩 중...
-        </div>
-      ) : sortedWords.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#666" }}>
-          등록된 키워드가 없습니다. 첫 번째 키워드를 입력해보세요!
-        </div>
-      ) : (
-        <div style={{
-          position: "relative", 
-          height: containerHeight,
-          marginTop: "1rem", 
-          background: "radial-gradient(circle, #ffffff 0%, #f9f9f9 70%, #f0f0f0 100%)",
-          borderRadius: "12px", 
-          overflow: "hidden", 
-          border: "1px solid #e0e0e0",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.05)"
-        }}>
-       
-
-       {sortedWords.map((word, index) => {
-  const fontSize = calculateFontSize(word.value);
-  const color = getWordColor(word.text);
-  const fontWeight = word.value > 7 ? "700" : word.value > 3 ? "600" : "500";
-  
-  // 위치 로직을 별도 함수로 분리
-  const getPosition = () => {
-    if (word.value > 7) {
-      // 큰 글자는 중앙에 배치 (중앙 30% 영역 내에)
-      return {
-        left: `${40 + Math.random() * 20}%`,
-        top: `${40 + Math.random() * 20}%`
-      };
-    } else if (word.value > 3) {
-      // 중간 크기 글자는 중간 영역에 배치 (중앙에서 30~60% 영역)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 25 + Math.random() * 15;
-      return {
-        left: `${50 + Math.cos(angle) * distance}%`,
-        top: `${50 + Math.sin(angle) * distance}%`
-      };
-    } else {
-      // 작은 글자는 외곽에 배치 (60~90% 영역)
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 40 + Math.random() * 35;
-      return {
-        left: `${50 + Math.cos(angle) * distance/2}%`,
-        top: `${50 + Math.sin(angle) * distance/2}%`
-      };
-    }
-  };
-  
-  const position = getPosition();
-  
-  return (
-    <div key={word.id || word.text} 
-      style={{
-        position: "absolute", 
-        left: position.left, 
-        top: position.top,
-        transform: `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1)}deg)`,
-        fontSize: `${fontSize}px`, 
-        color, 
-        fontWeight,
-        opacity: word.completed ? 0.7 : 1,
-        textDecoration: word.completed ? "line-through" : "none",
-        textShadow: word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)",
-        borderBottom: word.important ? `2px solid ${color}` : "none",
-        userSelect: "none", 
-        whiteSpace: "nowrap",
-        transition: "all 0.5s ease",
-        zIndex: Math.floor(word.value * 10),
-        animation: `fadeIn 0.5s ease-out both, float ${3 + Math.random() * 2}s ease-in-out infinite`
-      }}
-      onMouseEnter={(e) => {
-        e.target.style.transform = "translate(-50%, -50%) scale(1.2)";
-        e.target.style.zIndex = "1000";
-        e.target.style.textShadow = `0 0 10px ${color}`;
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.transform = `translate(-50%, -50%) rotate(${Math.floor(Math.random() * 2) * (Math.random() > 0.5 ? 1 : -1)}deg)`;
-        e.target.style.zIndex = Math.floor(word.value * 10);
-        e.target.style.textShadow = word.important ? `0 0 5px ${color}` : "1px 1px 1px rgba(0,0,0,0.05)";
-      }}
-      title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요' : ''}${word.completed ? ' - 완료됨' : ''}`}
-    >
-      {word.text}
-    </div>
-  );
-})}
-         
-          <div style={{
-            position: "absolute", bottom: "15px", left: "0", right: "0",
-            textAlign: "center", fontSize: "0.85rem", color: "#888",
-            backgroundColor: "rgba(255, 255, 255, 0.7)",
-            padding: "5px 0"
-          }}>
-            총 {uniqueWords.length}개의 키워드가 등록되었습니다
+        
+        {/* 입력 영역 */}
+        <div className="input-container">
+          <div className="input-group">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="미래 비전을 위한 핵심 키워드를 입력해주세요 (예: 환자중심, 전문성, 혁신, 소통, 성장...)"
+              className="keyword-input"
+            />
+            <button
+              onClick={handleSubmit}
+              className={`submit-button ${buttonClicked ? 'clicked' : ''}`}
+              disabled={!input.trim()}
+            >
+              등록하기
+            </button>
           </div>
         </div>
-      )}
-      {/* 관리자용 키워드 관리 영역 */}
-      <KeywordManager words={words} isAdmin={isAdmin} />
-      {/* 애니메이션 스타일 정의 */}
-      {/* 애니메이션 스타일 정의 */}
-<style>
-  {`
-    @keyframes fadeIn {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-    
-    @keyframes float {
-      0% { transform: translate(-50%, -50%) translateY(0px); }
-      50% { transform: translate(-50%, -50%) translateY(-5px); }
-      100% { transform: translate(-50%, -50%) translateY(0px); }
-    }
-  `}
-</style>
-      
+
+        {/* 상태 메시지 영역 */}
+        <div className="status-area">
+          {error && (
+            <div className="error-message">
+              ⚠️ {error}
+            </div>
+          )}
+
+          {duplicateError && (
+            <div className="duplicate-message">
+              ⏱️ <strong>{lastKeyword}</strong> 키워드를 방금 등록하셨습니다. 잠시 후 다시 시도해주세요.
+            </div>
+          )}
+        </div>
+
+        {/* 워드 클라우드 영역 */}
+        {loading && uniqueWords.length === 0 ? (
+          <div className="loading">
+            데이터를 불러오는 중입니다...
+          </div>
+        ) : sortedWords.length === 0 ? (
+          <div style={{ 
+            textAlign: "center", 
+            padding: "4rem 2rem", 
+            color: "#64748b",
+            background: "rgba(255, 255, 255, 0.8)",
+            borderRadius: "20px",
+            margin: "2rem 0"
+          }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💡</div>
+            <h3 style={{ color: "#475569", marginBottom: "0.5rem" }}>첫 번째 키워드를 등록해보세요!</h3>
+            <p>병원의 미래를 함께 그려나갈 소중한 키워드를 기다리고 있습니다.</p>
+          </div>
+        ) : (
+          <div className="wordcloud-container" style={{
+            position: "relative", 
+            height: containerHeight,
+            marginTop: "2rem"
+          }}>
+            {sortedWords.map((word, index) => {
+              const fontSize = calculateFontSize(word.value);
+              const color = getWordColor(word.text);
+              const fontWeight = word.value > 10 ? "700" : word.value > 5 ? "600" : "500";
+              
+              // 개선된 위치 배치 로직
+              const getPosition = () => {
+                if (word.value > 10) {
+                  // 가장 큰 글자는 중앙 핵심 영역 (중앙 40% 영역)
+                  return {
+                    left: `${45 + Math.random() * 10}%`,
+                    top: `${45 + Math.random() * 10}%`
+                  };
+                } else if (word.value > 5) {
+                  // 중간 크기는 중간 링 영역
+                  const angle = (Math.PI * 2 * index) / sortedWords.length + Math.random() * 0.5;
+                  const distance = 20 + Math.random() * 10;
+                  return {
+                    left: `${50 + Math.cos(angle) * distance}%`,
+                    top: `${50 + Math.sin(angle) * distance}%`
+                  };
+                } else if (word.value > 2) {
+                  // 중간-작은 크기는 외곽 링 영역
+                  const angle = (Math.PI * 2 * index) / sortedWords.length + Math.random() * 0.8;
+                  const distance = 30 + Math.random() * 15;
+                  return {
+                    left: `${50 + Math.cos(angle) * distance}%`,
+                    top: `${50 + Math.sin(angle) * distance}%`
+                  };
+                } else {
+                  // 작은 글자는 가장 외곽 영역
+                  const angle = Math.random() * Math.PI * 2;
+                  const distance = 35 + Math.random() * 20;
+                  return {
+                    left: `${Math.max(5, Math.min(95, 50 + Math.cos(angle) * distance))}%`,
+                    top: `${Math.max(5, Math.min(95, 50 + Math.sin(angle) * distance))}%`
+                  };
+                }
+              };
+              
+              const position = getPosition();
+              
+              return (
+                <div 
+                  key={word.id || word.text} 
+                  className="word-hover-effect"
+                  style={{
+                    position: "absolute", 
+                    left: position.left, 
+                    top: position.top,
+                    transform: `translate(-50%, -50%) rotate(${(Math.random() - 0.5) * 15}deg)`,
+                    fontSize: `${fontSize}px`, 
+                    color, 
+                    fontWeight,
+                    opacity: word.completed ? 0.6 : 1,
+                    textDecoration: word.completed ? "line-through" : "none",
+                    textShadow: word.important 
+                      ? `0 0 8px ${color}, 2px 2px 4px rgba(0,0,0,0.2)` 
+                      : "2px 2px 4px rgba(0,0,0,0.1)",
+                    borderBottom: word.important ? `3px solid ${color}` : "none",
+                    userSelect: "none", 
+                    whiteSpace: "nowrap",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    zIndex: Math.floor(word.value * 5),
+                    animation: `fadeInScale 0.6s ease-out ${index * 0.1}s both, gentleFloat ${4 + Math.random() * 2}s ease-in-out infinite`,
+                    cursor: "pointer",
+                    padding: "0.25rem 0.5rem",
+                    borderRadius: "8px",
+                    background: word.important 
+                      ? `linear-gradient(135deg, ${color}15, ${color}08)` 
+                      : "transparent"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = "translate(-50%, -50%) scale(1.15) rotate(0deg)";
+                    e.target.style.zIndex = "1000";
+                    e.target.style.textShadow = `0 0 15px ${color}, 0 0 25px ${color}40`;
+                    e.target.style.background = `linear-gradient(135deg, ${color}20, ${color}10)`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = `translate(-50%, -50%) rotate(${(Math.random() - 0.5) * 15}deg)`;
+                    e.target.style.zIndex = Math.floor(word.value * 5);
+                    e.target.style.textShadow = word.important 
+                      ? `0 0 8px ${color}, 2px 2px 4px rgba(0,0,0,0.2)` 
+                      : "2px 2px 4px rgba(0,0,0,0.1)";
+                    e.target.style.background = word.important 
+                      ? `linear-gradient(135deg, ${color}15, ${color}08)` 
+                      : "transparent";
+                  }}
+                  title={`${word.text} (${word.value}회 언급)${word.important ? ' - 중요 키워드' : ''}${word.completed ? ' - 완료됨' : ''}`}
+                >
+                  {word.text}
+                </div>
+              );
+            })}
+            
+            {/* 통계 정보 */}
+            <div className="counter-area" style={{
+              position: "absolute", 
+              bottom: "20px", 
+              left: "0", 
+              right: "0",
+              textAlign: "center"
+            }}>
+              📊 총 <strong>{uniqueWords.length}개</strong>의 키워드가 등록되었습니다
+              {sortedWords.length > 0 && (
+                <span style={{ marginLeft: "1rem", opacity: 0.8 }}>
+                  (상위 {sortedWords.length}개 표시)
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 관리자용 키워드 관리 영역 */}
+        {isAdmin && (
+          <div style={{ marginTop: "3rem" }}>
+            <KeywordManager words={words} isAdmin={isAdmin} />
+          </div>
+        )}
+      </div>
+
+      {/* 개선된 애니메이션 스타일 */}
+      <style jsx>{`
+        @keyframes fadeInScale {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.3) rotate(180deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+          }
+        }
+        
+        @keyframes gentleFloat {
+          0%, 100% { 
+            transform: translate(-50%, -50%) translateY(0px) rotate(0deg); 
+          }
+          25% { 
+            transform: translate(-50%, -50%) translateY(-3px) rotate(1deg); 
+          }
+          75% { 
+            transform: translate(-50%, -50%) translateY(3px) rotate(-1deg); 
+          }
+        }
+
+        .submit-button.clicked {
+          transform: scale(0.95);
+          box-shadow: 
+            0 2px 8px rgba(30, 64, 175, 0.6),
+            inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-button:disabled {
+          background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        .submit-button:disabled:hover {
+          transform: none;
+          box-shadow: none;
+        }
+      `}</style>
     </div>
   );
 }
